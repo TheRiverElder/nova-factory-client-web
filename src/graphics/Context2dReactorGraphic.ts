@@ -40,7 +40,7 @@ export class Context2dReactorGraphic implements ReactorGraphic {
         const [x, y] = pos;
         const displaySlotInfoNumber = y * this.lastReactor.width + x;
         const selectedSlot = this.selectedSlot;
-        if (selectedSlot && selectedSlot[x] === x && selectedSlot[y] === y) {
+        if (selectedSlot && selectedSlot[0] === x && selectedSlot[1] === y) {
             this.selectedSlot = null;
             if (this.onSlotClick) this.onSlotClick(-1);
         } else {
@@ -65,11 +65,11 @@ export class Context2dReactorGraphic implements ReactorGraphic {
 
     render(reactor: Reactor): void {
         const { width, height } = reactor;
-        const canvasRect = this.canvas.getBoundingClientRect();
-        const canvasWidth = canvasRect.width;
-        const canvasHeight = canvasRect.height;
-        this.canvas.width = Math.floor(canvasWidth);
-        this.canvas.height = Math.floor(canvasHeight);
+        // const canvasRect = this.canvas.getBoundingClientRect();
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+        // this.canvas.width = Math.floor(canvasWidth);
+        // this.canvas.height = Math.floor(canvasHeight);
 
         const cellSize = Math.min(canvasWidth / width, canvasHeight / height);
         this.lastCellSize = cellSize;
@@ -79,7 +79,7 @@ export class Context2dReactorGraphic implements ReactorGraphic {
         g.clearRect(0, 0, canvasWidth, canvasHeight);
 
         function genColorNum(t: number) {
-            return toHeatColorInfinity(t, 1 / 2000.0);
+            return toHeatColorInfinity(t, 1 / 500.0);
         }
 
         function genColorStyle(t: number) {
@@ -96,7 +96,7 @@ export class Context2dReactorGraphic implements ReactorGraphic {
             if (cell) {
                 let colorNum = genColorNum(temperature);
                 colorNum -= colorNum % 0x0100;
-                const ratio = toHeatInfinity(temperature, 1 / 2000.0);
+                const ratio = toHeatInfinity(temperature, 1 / 100.0);
                 const gradient = g.createRadialGradient(cxp, cyp, cellSize / 8, cxp, cyp, Math.max(cellSize / 4, cellSize * ratio));
                 gradient.addColorStop(0.0, makeColor(colorNum + 0xff));
                 // gradient.addColorStop(0.75, makeColor(colorNum + 0x7f));

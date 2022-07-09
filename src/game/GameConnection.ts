@@ -1,6 +1,7 @@
 import type { ClientPack } from "../data/ClientPack";
 import type { Factory } from "../data/Factory";
 import type { FactoryHistory, ReactorHistory } from "../data/History";
+import type { Level } from "../data/Level";
 import type { Reactor } from "../data/Reactor";
 import type { ServerPack, StateServerPack } from "../data/ServerPack";
 import type { Connection, Handler } from "./Connection";
@@ -31,16 +32,19 @@ export class GameConnection {
     private handlePack = (pack: ServerPack) => {
         if (pack.type === 'response') {
             const clientId = pack.clientId;
-            const [resolve, reject, pid] = this.unhandledRequests.get(clientId);
-            if (pack.succeeded && resolve) {
-                resolve(pack.data);
-            } else if (!pack.succeeded && reject) {
-                reject(pack.message);
+            const request = this.unhandledRequests.get(clientId);
+            if (request) {
+                const [resolve, reject, pid] = request;
+                if (pack.succeeded && resolve) {
+                    resolve(pack.data);
+                } else if (!pack.succeeded && reject) {
+                    reject(pack.message);
+                }
+                if (pid !== null) {
+                    clearTimeout(pid);
+                }
+                this.unhandledRequests.delete(clientId);
             }
-            if (pid !== null) {
-                clearTimeout(pid);
-            }
-            this.unhandledRequests.delete(clientId);
         } else if (pack.type === "state") {
             this.onStateListeners.forEach(l => l(pack));
         }
@@ -65,6 +69,14 @@ export class GameConnection {
         });
     }
 
+    public async getLevelInfo(): Promise<Level> {
+        return this.sendPack({
+            clientId: this.genId(),
+            head: "getLevelInfo",
+            args: {},
+        });
+    }
+
     public async getFactoryInfo(): Promise<Factory> {
         return this.sendPack({
             clientId: this.genId(),
@@ -73,17 +85,17 @@ export class GameConnection {
         });
     }
 
-    public async getReactorInfo(index: number): Promise<Reactor> {
+    public async getReactorInfo(uid: number): Promise<Reactor> {
         return this.sendPack({
             clientId: this.genId(),
             head: "getReactorInfo",
             args: {
-                reactorIndex: index,
+                reactorUid: uid,
             },
         });
     }
 
-    // start: time of tick, inclusive
+    // start: time of tick, inclusiveturnReactor
     // end: time of tick, exclusive
     // should: start <= end
     // they can be negative, -n for history[history.length - n]
@@ -99,12 +111,12 @@ export class GameConnection {
     // end: time of tick, exclusive
     // should: start <= end
     // they can be negative, -n for history[history.length - n]
-    public async getReactorHistory(index: number, start: number, end: number): Promise<ReactorHistory> {
+    public async getReactorHistory(uid: number, start: number, end: number): Promise<ReactorHistory> {
         return this.sendPack({
             clientId: this.genId(),
             head: "getReactorHistory",
             args: {
-                reactorIndex: index,
+                reactorUid: uid,
                 start,
                 end,
             },
@@ -119,54 +131,73 @@ export class GameConnection {
         });
     }
 
-    public async turnReactor(index: number, status: boolean): Promise<void> {
+    public async turnReactor(uid: number, status: boolean): Promise<void> {
         return this.sendPack({
             clientId: this.genId(),
             head: "turnReactor",
-            args: { 
-                reactorIndex: index,
-                status, 
+            args: {
+                reactorUid: uid,
+                status,
             },
         });
     }
 
-    public async setSlotDepth(reactorIndex: number, slotNumber: number, depth: number): Promise<void> {
+    public async setSlotDepth(reactorUid: number, slotNumber: number, depth: number): Promise<void> {
         return this.sendPack({
             clientId: this.genId(),
             head: "setSlotDepth",
-            args: { 
-                reactorIndex,
+            args: {
+                reactorUid,
                 slotNumber,
-                depth, 
+                depth,
             },
         });
     }
 
-    public async buy(shopItemIndex: number): Promise<void> {
+    public async buy(shopItemUid: number): Promise<void> {
         return this.sendPack({
             clientId: this.genId(),
             head: "buy",
-            args: { shopItemIndex },
+            args: { shopItemUid },
         });
     }
 
-    public async use(reactorIndex: number, slotNumber: number, storageItemIndex: number): Promise<void> {
+    public async use(reactorUid: number, slotNumber: number, storageItemUid: number): Promise<void> {
         return this.sendPack({
             clientId: this.genId(),
             head: "use",
             args: {
-                reactorIndex,
+                reactorUid,
                 slotNumber,
-                storageItemIndex,
+                storageItemUid,
             },
         });
     }
 
-    public async sell(storageItemIndex: number): Promise<void> {
+    public async pull(reactorUid: number, slotNumber: number): Promise<void> {
+        return this.sendPack({
+            clientId: this.genId(),
+            head: "pull",
+            args: {
+                reactorUid,
+                slotNumber,
+            },
+        });
+    }
+
+    public async sell(storageItemUid: number): Promise<void> {
         return this.sendPack({
             clientId: this.genId(),
             head: "sell",
-            args: { storageItemIndex },
+            args: { storageItemUid },
+        });
+    }
+
+    public async execute(commands: string): Promise<void> {
+        return this.sendPack({
+            clientId: this.genId(),
+            head: "execute",
+            args: { commands },
         });
     }
 }

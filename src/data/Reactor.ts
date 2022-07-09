@@ -1,6 +1,7 @@
 import type { CellSlot } from "./CellSlot";
+import type { Unique } from "./Unique";
 
-export interface Reactor {
+export interface Reactor extends Unique<number> {
     "size": number;
     "width": number;
     "height": number;

@@ -16,6 +16,10 @@ const translations = {
     set: "设置",
     turn_on: "启动",
     turn_off: "关闭",
+    pull: "脱出",
+    sell: "卖",
+    buy: "买",
+    use: "用",
 };
 
 export function translate(src: string): string {

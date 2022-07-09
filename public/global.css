@@ -12,6 +12,11 @@ body {
 	font-family: '微软雅黑', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
+@font-face {
+	font-family: "Milibus Sb";
+	src: url("./fonts/Milibus\ Sb.ttf");
+}
+
 a {
 	color: rgb(0,100,200);
 	text-decoration: none;
@@ -61,3 +66,12 @@ button:not(:disabled):active {
 button:focus {
 	border-color: #666;
 }
+
+.centerize {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.fill-x, .fill { width: 100%; }
+.fill-y, .fill { height: 100%; }

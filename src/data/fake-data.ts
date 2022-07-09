@@ -2,18 +2,19 @@ import type { Factory } from "./Factory";
 import type { Reactor } from "./Reactor";
 
 export function createEmptyFactory(): Factory {
-    return {
+	return {
 		buttery: 0,
 		account: 0,
+		lastGenElectricity: 0,
 		shop: [],
 		storage: [],
-		levelInfo: "",
 		reactors: [],
-    };
+	};
 }
 
 export function createEmptyReactor(): Reactor {
-    return {
+	return {
+		uid: 0,
 		size: 0,
 		width: 0,
 		height: 0,
@@ -21,7 +22,7 @@ export function createEmptyReactor(): Reactor {
 		status: "SLEEPING",
 		running: false,
 		temperature: 0,
-        breakingTemperature: 0,
-        brokenTemperature: 0,
-    };
+		breakingTemperature: 0,
+		brokenTemperature: 0,
+	};
 }

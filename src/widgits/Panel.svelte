@@ -4,13 +4,13 @@
 <div class="Panel fill">
     <slot name="title"/>
     <div class="content flex-1">
-        <slot name="content"/>
+        <slot/>
     </div>
 </div>
 
 <style>
     .Panel {
-        padding: 1.5em;
+        /* padding: 1.5em; */
         overflow: hidden;
         background-color: #22240f7f;
         color: #ffffff;

@@ -2,41 +2,24 @@
 	import { onDestroy, onMount, setContext } from "svelte";
 	import { Fission } from "./background";
 	import { Connection } from "./game/Connection";
-	import { KEY_GET_CONNECTION } from "./context";
-	import type { Factory } from "./data/Factory";
-	import type { Reactor } from "./data/Reactor";
-	import { createGenericMessageHandler } from "./game/GenericMessageHandler";
+	import { KEY_APPEND_MESSAGE, KEY_GET_CONNECTION } from "./context";
 	import MainPage from "./pages/MainPage.svelte";
-
-	let factory: Factory = null;
-	let reactor: Reactor = null;
-
-	const onMessage = createGenericMessageHandler({
-		onReceiveFactory: (f) => (factory = f),
-		onReceiveReactor: (r) => (reactor = r),
-	});
-	const connection = new Connection(`ws://${window.location.hostname}:8989/`);
-	connection.onMessageHandlers.add(onMessage);
-	const onDestroyhandler = () => {
-		connection.onMessageHandlers.delete(onMessage);
-		connection.close();
-		backgroundController = null;
-	};
-	connection.send({
-		clientId: -1,
-		head: "request",
-		args: {
-			requestList: [{ id: "factory_info" }, { id: "reactor_info", index: 0 }],
-		},
-	});
-
-	setContext(KEY_GET_CONNECTION, () => connection);
-
-	onMount(setupBackground);
-	onDestroy(onDestroyhandler);
+	import { GameConnection } from "./game/GameConnection";
 
 	let backgroundController: Fission;
 	let backgroundCanvas: HTMLCanvasElement;
+
+	const connection = new Connection(`ws://${window.location.hostname}:8989/`);
+	const gameConn = new GameConnection(connection);
+	const onDestroyhandler = () => {
+		connection.close();
+		backgroundController = null;
+	};
+
+	setContext(KEY_GET_CONNECTION, () => gameConn);
+
+	onMount(setupBackground);
+	onDestroy(onDestroyhandler);
 
 	function setupBackground() {
 		const { width, height } = backgroundCanvas.getBoundingClientRect();
@@ -57,13 +40,33 @@
 		}
 		animate();
 	}
+
+	let messages: Array<string> = [];
+
+	function appendMessage(message: string) {
+		messages.unshift(message);
+		messages = messages;
+		setTimeout(() => {
+			messages.pop();
+			messages = messages;
+		}, 5000);
+	}
+	setContext(KEY_APPEND_MESSAGE, appendMessage);
 </script>
 
 <div class="fill App">
 	<canvas class="fill" bind:this={backgroundCanvas} />
 
 	<div class="fill content">
-		<MainPage {factory} {reactor} index={0} />
+		<MainPage />
+	</div>
+
+	<div class="fill message-layer">
+		{#each messages as message}
+			<div class="message">
+				<span>{message}</span>
+			</div>
+		{/each}
 	</div>
 </div>
 
@@ -76,6 +79,7 @@
 	}
 
 	div.content,
+	div.message-layer,
 	canvas {
 		position: absolute;
 		left: 0;
@@ -86,5 +90,23 @@
 
 	canvas {
 		opacity: 0.5;
+	}
+
+	div.message-layer {
+		padding: 2em;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: flex-start;
+		pointer-events: none;
+	}
+
+	.message {
+		min-width: 10em;
+		width: 20%;
+		padding: 1em;
+		margin: 1em;
+		color: #ffff00;
+		background-color: #0000007f;
 	}
 </style>
