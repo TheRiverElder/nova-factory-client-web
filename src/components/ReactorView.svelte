@@ -70,7 +70,14 @@
                 <canvas bind:this={canvas} />
             </div>
             <div class="graph-wrapper" bind:clientWidth={chartWidth}>
-                <Chart data={history} minRange={1000} width={chartWidth} height={chartWidth * 0.8} padding={chartWidth * 0.05} min={0} />
+                <Chart
+                    data={history}
+                    minRange={1000}
+                    width={chartWidth}
+                    height={chartWidth * 0.8}
+                    padding={chartWidth * 0.05}
+                    min={0}
+                />
             </div>
         </div>
     </div>

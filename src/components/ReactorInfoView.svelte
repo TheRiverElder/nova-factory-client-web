@@ -21,12 +21,14 @@
         ];
     }
 
-    const valueMapper = (n: number) => Math.tanh(n * (1 / 500));
-    const colorMapper = (n: number) => toHeatColorInfinity(n, 1 / 100);
+    const valueMapper = (n: number) => Math.tanh(n * (1 / 2000));
+    const colorMapper = (n: number) => toHeatColorInfinity(n, 1 / 2000);
 </script>
 
 <script lang="ts">
     export let reactor: Reactor | null;
+
+    let upperHeight: number = 0;
 
     $: reactorData = reactor ? getFactoryData(reactor) : [];
 
@@ -44,12 +46,32 @@
 </script>
 
 {#if reactor}
-    <div class="ReactorInfoView fill">
-        <div class="upper">
-            <div class="flex-1">
+    <div class="ReactorInfoView fill overflow-hidden">
+        <div class="upper flex-1 overflow-hidden">
+            <div class="flex-8" bind:clientHeight={upperHeight}>
                 <Table data={reactorData} weights={[6, 6]} />
             </div>
-            <ValueBar value={reactor.temperature} maxValue={1} {valueMapper} {colorMapper} valves={[reactor.breakingTemperature, reactor.brokenTemperature]} />
+            <div class="spacer flex-2"/>
+            <div
+                class="flex-2 fill-y overflow-hidden"
+                style={`
+                    width: 5em;
+                    height: ${upperHeight}px;
+                `}
+            >
+                <ValueBar
+                    value={reactor.temperature}
+                    maxValue={1}
+                    {valueMapper}
+                    {colorMapper}
+                    valves={[reactor.breakingTemperature, reactor.brokenTemperature]}
+                >
+                    <div class="temperature-label">
+                        <span>当前温度</span>
+                        <span>HU/MU</span>
+                    </div>
+                </ValueBar>
+            </div>
         </div>
         <div class="button-bar">
             {#if reactor.running}
@@ -96,5 +118,9 @@
     button.turn-off {
         background-color: #00000070;
         color: #ffff00;
+    }
+
+    .temperature-label {
+        font-size: 0.5em;
     }
 </style>

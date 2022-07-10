@@ -26,14 +26,14 @@
 
 <style>
     .row {
+        font-family: "Milibus Sb", 'Consolas';
         padding: .2em 0;
         border-bottom: 0.1em solid #223344;
         display: flex;
         flex-direction: row;
-        font-family: 'Consolas';
     }
 
     .row > * {
-        text-align: center;
+        text-align: start;
     }
 </style>

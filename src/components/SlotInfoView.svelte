@@ -18,8 +18,8 @@
         ];
     }
 
-    const valueMapper = (n: number) => Math.tanh(n * (1 / 500));
-    const colorMapper = (n: number) => toHeatColorInfinity(n, 1 / 100);
+    const valueMapper = (n: number) => Math.tanh(n * (1 / 2000));
+    const colorMapper = (n: number) => toHeatColorInfinity(n, 1 / 2000);
 </script>
 
 <script lang="ts">
@@ -38,6 +38,7 @@
     $: displayNewDepth = newDepth < 0 && cellSlot ? cellSlot.depth : newDepth;
 
     let newDepth: number = -1;
+    let upperHeight: number = 0;
 
     function cancelSetDepth() {
         newDepth = -1;
@@ -67,10 +68,29 @@
 {#if reactor && cellSlot}
     <div class="SlotInfoView fill">
         <div class="upper">
-            <div class="flex-1">
+            <div class="flex-10" bind:clientHeight={upperHeight}>
                 <Table data={slotData} weights={[6, 6]} />
             </div>
-            <ValueBar value={cellSlot.temperature} maxValue={1} {valueMapper} {colorMapper} valves={[reactor.breakingTemperature, reactor.brokenTemperature]} />
+            <div
+                class="flex-2 fill-y overflow-hidden"
+                style={`
+                    width: 5em;
+                    height: ${upperHeight}px;
+                `}
+            >
+                <ValueBar
+                    value={cellSlot.temperature}
+                    maxValue={1}
+                    {valueMapper}
+                    {colorMapper}
+                    valves={[reactor.breakingTemperature, reactor.brokenTemperature]}
+                >
+                    <div class="temperature-label">
+                        <span>当前温度</span>
+                        <span>HU/MU</span>
+                    </div>
+                </ValueBar>
+            </div>
         </div>
         {#if cellSlot.cell}
             <div class="new-depth-wrapper">
@@ -132,5 +152,9 @@
     button.set {
         background-color: #ffff00;
         color: #000000;
+    }
+
+    .temperature-label {
+        font-size: 0.5em;
     }
 </style>

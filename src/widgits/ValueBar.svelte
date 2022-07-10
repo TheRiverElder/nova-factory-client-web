@@ -1,6 +1,7 @@
 <script lang="ts">
     import { afterUpdate, onMount } from "svelte";
     import { makeColor } from "../graphics/utils";
+    import { getChamferPath, linkClosedPath } from "../utils/graphics";
 
     export let value: number = 0;
     export let maxValue: number = 1;
@@ -16,6 +17,8 @@
         const g = canvas.getContext("2d");
 
         const { width, height } = canvas.getBoundingClientRect();
+        canvas.width = width;
+        canvas.height = height;
         const halfWidth = width / 2;
         const quaterWidth = width / 4;
 
@@ -23,22 +26,39 @@
 
         g.save();
 
-        g.translate(halfWidth, height);
+        g.translate(0, height);
         g.scale(1, -1);
 
         const v = valueMapper(value);
         const ratio = v / maxValue;
 
+        g.save();
+
+        g.lineWidth = 2;
+
+        linkClosedPath(g, getChamferPath(quaterWidth, 0, halfWidth, height, halfWidth, halfWidth * 0.25));
+        g.clip();
+
         g.fillStyle = "#ffffff";
-        g.fillRect(-quaterWidth, 0, halfWidth, height);
+        g.fillRect(quaterWidth, 0, halfWidth, height);
         g.fillStyle = makeColor(colorMapper(value));
-        g.fillRect(-quaterWidth, 0, halfWidth, ratio * height);
+        g.fillRect(quaterWidth, 0, halfWidth, ratio * height);
+
+        linkClosedPath(g, getChamferPath(quaterWidth, 0, halfWidth, height, halfWidth, halfWidth * 0.25));
+        g.strokeStyle = "#ffffff";
+        g.stroke();
+
+        g.restore();
 
         for (const valve of valves) {
             const v = valueMapper(valve);
             const ratio = v / maxValue;
+
+            linkClosedPath(g, getChamferPath(0, ratio * height - 2, width, 5, 3, 5));
             g.fillStyle = makeColor(colorMapper(valve));
-            g.fillRect(-halfWidth, ratio * height, width, 5);
+            g.fill();
+            g.strokeStyle = "#ffffff";
+            g.stroke();
         }
 
         g.restore();
@@ -48,6 +68,28 @@
     afterUpdate(draw);
 </script>
 
-<div>
-    <canvas bind:this={canvas} width="50" height="300" />
+<div class="ValueBar fill overflow-hidden">
+    <div class="canvas-wrapper flex-1 fill-x overflow-hidden">
+        <canvas class="fill" bind:this={canvas} />
+    </div>
+    <slot />
 </div>
+
+<style>
+    .ValueBar {
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        align-items: center;
+    }
+
+    .canvas-wrapper {
+        flex: 1;
+    }
+
+    .canvas-wrapper,
+    canvas {
+        padding: 0;
+        margin: 0;
+    }
+</style>
