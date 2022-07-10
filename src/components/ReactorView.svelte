@@ -85,7 +85,7 @@
     <div class="downer">
         <div class="down-left">
             <h3 class="title">反应堆信息</h3>
-            <div>
+            <div class="flex-1">
                 {#if reactor}
                     <ReactorInfoView {reactor} />
                 {/if}
@@ -93,7 +93,7 @@
         </div>
         <div class="down-right">
             <h3 class="title">单元槽信息</h3>
-            <div>
+            <div class="flex-1">
                 {#if reactor && selectedSlotNumber >= 0}
                     <SlotInfoView cellSlot={reactor.slots[selectedSlotNumber]} {reactor} />
                 {/if}
@@ -121,6 +121,8 @@
         padding: 0 1em;
         height: 100%;
         flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 
     div.upper {

@@ -41,7 +41,16 @@
     <div class="FactoryInfoView fill">
         <Table data={factoryData} weights={[6, 6]} />
         <div class="fill-x" bind:clientWidth={barWidth}>
-            <Chart data={history} minRange={1000} width={barWidth} height={barWidth * 0.8} padding={barWidth * 0.05} min={0} />
+            <Chart
+                data={history}
+                minRange={1000}
+                width={barWidth}
+                height={barWidth * 0.8}
+                padding={barWidth * 0.05}
+                min={0}
+                lineCount={2}
+                lineColors={["#ffff00", "#ff00ff"]}
+            />
         </div>
         <p>反应堆列表：</p>
         <div>

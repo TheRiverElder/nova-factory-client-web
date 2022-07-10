@@ -5,17 +5,18 @@
 
 <script lang="ts">
     import { beforeUpdate } from "svelte";
-    import { arrayPeek } from "../utils/lang";
     import { isRegularNumber } from "../utils/math";
-import { shortenNumber } from "../utils/numebr-display";
+    import { shortenNumber } from "../utils/numebr-display";
 
     export let data: DataSource | null;
+    export let lineCount: number = 1;
     export let minRange: number = 0;
     export let width: number;
     export let height: number;
     export let min: number = Number.NEGATIVE_INFINITY;
     export let max: number = Number.POSITIVE_INFINITY;
     export let padding: number = 0;
+    export let lineColors: Array<string> = [];
 
     let valueTextWidth = 30;
     let labelTextHeight = 20;
@@ -28,8 +29,9 @@ import { shortenNumber } from "../utils/numebr-display";
     const lineY = (yRatio: number) => chartY(labelTextHeight + padding + (height - labelTextHeight - 2 * padding) * yRatio);
 
     let axisPoints: [Point, Point, Point];
-    let points: Array<Point> = [];
-    let path: string = "";
+    let pointsList: Array<Array<Point>> = [];
+    let pillerTopList: Array<Point> = [];
+    let pathList: Array<string> = [];
     let valueTextInfo: [Point, Point, Point] = [
         [0, 0],
         [0, 0],
@@ -51,9 +53,9 @@ import { shortenNumber } from "../utils/numebr-display";
         if (data && data.length > 0) {
             const rc = data.length;
 
-            const values = data.map((r) => r[1]);
-            const maxValue = Math.max(...values);
-            const minValue = Math.min(...values);
+            const valuesList = data.map((rec) => rec.slice(1, 1 + lineCount));
+            const maxValue = Math.max(...valuesList.map((values) => Math.max(...values)));
+            const minValue = Math.min(...valuesList.map((values) => Math.min(...values)));
             const midValue = (maxValue + minValue) / 2;
 
             let rangeMid = 0;
@@ -89,8 +91,25 @@ import { shortenNumber } from "../utils/numebr-display";
             }
             // console.table({ maxValue, minValue, midValue, range, rangeMax, rangeMin });
 
-            points = data.map(([, v], i) => [lineX((i + 0.5) / rc), lineY((v - rangeMin) / range)]);
-            path = points.map(([x, y], i) => `${i ? "L" : "M"} ${x} ${y}`).join(" ");
+            pointsList = [];
+            for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+                const points: Array<Point> = [];
+                for (let dataIndex = 0; dataIndex < data.length; dataIndex++) {
+                    const x: number = lineX((dataIndex + 0.5) / rc);
+                    const y: number = lineY((data[dataIndex][1 + lineIndex] - rangeMin) / range);
+                    points.push([x, y]);
+                }
+                pointsList.push(points);
+            }
+
+            pathList = pointsList.map((points) => points.map(([x, y], i) => `${i ? "L" : "M"} ${x} ${y}`).join(" "));
+
+            pillerTopList = [];
+            for (let i = 0; i < pointsList[0].length; i++) {
+                const x: number = pointsList[0][i][0];
+                const y: number = Math.max(...pointsList.map((points) => points[i][1]));
+                pillerTopList.push([x, y]);
+            }
 
             const verticalGridCount = 12;
             const horizontalGridCount = 12;
@@ -107,8 +126,9 @@ import { shortenNumber } from "../utils/numebr-display";
                 [1.0, rangeMax],
             ];
         } else {
-            points = [];
-            path = "";
+            pointsList = [];
+            pathList = [];
+            pillerTopList = [];
             valueTextInfo = [
                 [0, 0],
                 [0, 0],
@@ -129,18 +149,22 @@ import { shortenNumber } from "../utils/numebr-display";
         {/each}
 
         <!-- 数据点垂线 -->
-        {#each points as p, i}
-            <line x1={p[0]} y1={lineY(0)} x2={p[0]} y2={p[1]} stroke="#ffffff7f" />
+        {#each pillerTopList as [x, y]}
+            <line x1={x} y1={lineY(0)} x2={x} y2={y} stroke="#ffffff7f" />
         {/each}
 
         <!-- 折线 -->
-        <path x={0} y={0} d={path} stroke="#ffff00" fill="transparent" stroke-width={2} />
+        {#each pathList as path, lineIndex}
+            <path x={0} y={0} d={path} stroke={lineColors[lineIndex] || "#ffff00"} fill="transparent" stroke-width={2} />
+        {/each}
 
         <!-- 数据点与横坐标 -->
-        {#each points as [x, y], i}
-            <circle cx={x} cy={y} r={2} fill="#ffff00" />
-            <text {x} y={offsetY(y, +5)} fill="#ffffff">{shortenNumber(data[i][1])}</text>
-            <text {x} y={offsetY(lineY(0), -10)} fill="#ffffff">{data[i][0]}</text>
+        {#each pointsList as points, lineIndex}
+            {#each points as [x, y], xIndex}
+                <circle cx={x} cy={y} r={2} fill={lineColors[lineIndex] || "#ffff00"} />
+                <text {x} y={offsetY(y, lineIndex % 2 ? +5 : -15)} fill="#ffffff">{shortenNumber(data[xIndex][1 + lineIndex])}</text>
+                <text {x} y={offsetY(lineY(0), -10)} fill="#ffffff">{data[xIndex][0]}</text>
+            {/each}
         {/each}
 
         <!-- 坐标轴 -->

@@ -1,14 +1,12 @@
 <script lang="ts" context="module">
-    import Table from "../widgits/Table.svelte";
     import type { Reactor } from "../data/Reactor";
     import { translate } from "../language";
-    import ValueBar from "../widgits/ValueBar.svelte";
-    import { toHeatColorInfinity } from "../graphics/utils";
     import { KEY_APPEND_COMMAND, KEY_APPEND_MESSAGE, KEY_GET_CONNECTION, TYPE_APPEND_COMMAND, TYPE_APPEND_MESSAGE, TYPE_GET_CONNECTION } from "../context";
     import { getContext } from "svelte";
     import { simpleResponse } from "../utils/lang";
+    import type { TableData } from "../widgits/InfoPanelWithTemperatureBar.svelte";
 
-    function getFactoryData(reactor: Reactor | null) {
+    function getFactoryData(reactor: Reactor | null): TableData {
         if (!reactor) return [];
         return [
             ["尺寸", reactor.size],
@@ -20,15 +18,12 @@
             ["最高温度", reactor.temperature.toFixed(2) + "K"],
         ];
     }
-
-    const valueMapper = (n: number) => Math.tanh(n * (1 / 2000));
-    const colorMapper = (n: number) => toHeatColorInfinity(n, 1 / 2000);
 </script>
 
 <script lang="ts">
-    export let reactor: Reactor | null;
+    import InfoPanelWithTemperatureBar from "../widgits/InfoPanelWithTemperatureBar.svelte";
 
-    let upperHeight: number = 0;
+    export let reactor: Reactor | null;
 
     $: reactorData = reactor ? getFactoryData(reactor) : [];
 
@@ -46,55 +41,18 @@
 </script>
 
 {#if reactor}
-    <div class="ReactorInfoView fill overflow-hidden">
-        <div class="upper flex-1 overflow-hidden">
-            <div class="flex-8" bind:clientHeight={upperHeight}>
-                <Table data={reactorData} weights={[6, 6]} />
-            </div>
-            <div class="spacer flex-2"/>
-            <div
-                class="flex-2 fill-y overflow-hidden"
-                style={`
-                    width: 5em;
-                    height: ${upperHeight}px;
-                `}
-            >
-                <ValueBar
-                    value={reactor.temperature}
-                    maxValue={1}
-                    {valueMapper}
-                    {colorMapper}
-                    valves={[reactor.breakingTemperature, reactor.brokenTemperature]}
-                >
-                    <div class="temperature-label">
-                        <span>当前温度</span>
-                        <span>HU/MU</span>
-                    </div>
-                </ValueBar>
-            </div>
-        </div>
-        <div class="button-bar">
+    <InfoPanelWithTemperatureBar tableData={reactorData} temperature={reactor.temperature} valves={[reactor.breakingTemperature, reactor.brokenTemperature]}>
+        <div class="button-bar fill-x">
             {#if reactor.running}
                 <button class="turn-off" on:click={() => turn(false)}>{translate("turn_off")}</button>
             {:else}
                 <button class="turn-on" on:click={() => turn(true)}>{translate("turn_on")}</button>
             {/if}
         </div>
-    </div>
+    </InfoPanelWithTemperatureBar>
 {/if}
 
 <style>
-    .ReactorInfoView {
-        display: flex;
-        flex-wrap: nowrap;
-        flex-direction: column;
-    }
-
-    .upper {
-        display: flex;
-        flex-wrap: nowrap;
-    }
-
     .button-bar {
         display: flex;
         align-items: center;
@@ -118,9 +76,5 @@
     button.turn-off {
         background-color: #00000070;
         color: #ffff00;
-    }
-
-    .temperature-label {
-        font-size: 0.5em;
     }
 </style>

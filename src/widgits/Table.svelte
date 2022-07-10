@@ -35,5 +35,6 @@
 
     .row > * {
         text-align: start;
+        padding: 0 1em;
     }
 </style>
