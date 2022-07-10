@@ -5,7 +5,7 @@
     const valueMapper = (n: number) => Math.tanh(n * (1 / 2000));
     const colorMapper = (n: number) => toHeatColorInfinity(n, 1 / 2000);
 
-    export type TableData = Array<[string, any]>;
+    export type TableData = Array<[string, any, string?]>;
 </script>
 
 <script lang="ts">
@@ -22,9 +22,9 @@
     <div class="upper flex-8">
         <div class="info-list flex-9" bind:clientHeight={upperHeight}>
             <!-- <Table data={tableData} weights={[6, 6]} /> -->
-            {#each tableData as [title, value]}
+            {#each tableData as [title, value, unit]}
                 <div class="info-item">
-                    <InfoItem {title} {value} />
+                    <InfoItem {title} {value} unit={unit || ""} />
                 </div>
             {/each}
         </div>

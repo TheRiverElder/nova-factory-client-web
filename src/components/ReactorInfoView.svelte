@@ -9,13 +9,11 @@
     function getFactoryData(reactor: Reactor | null): TableData {
         if (!reactor) return [];
         return [
-            ["尺寸", reactor.size],
-            ["宽度", reactor.width],
-            ["长度", reactor.height],
-            ["正在运行", reactor.running ? "是" : "否"],
-            ["单元槽数量", reactor.slots.length],
+            ["尺寸/槽数", `${reactor.size}/${reactor.slots.length}`, "个"],
+            ["宽×长", `${reactor.width}×${reactor.height}`],
+            ["运行情况", reactor.status ? "正在" : "停止", "运行"],
             ["状态", translate(reactor.status)],
-            ["最高温度", reactor.temperature.toFixed(2) + "K"],
+            ["最高温度", reactor.temperature, "HU/MU"],
         ];
     }
 </script>

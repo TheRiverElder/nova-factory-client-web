@@ -37,7 +37,7 @@
     }
 
     .content {
-        font-family: "Milibus Sb", "Consolas";
+        font-family: "Milibus Sb", "字体圈欣意冠黑体", "Consolas";
         font-size: 1.5em;
         display: flex;
         justify-content: flex-end;

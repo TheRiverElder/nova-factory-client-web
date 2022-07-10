@@ -1,24 +1,23 @@
 <script lang="ts" context="module">
     import type { CellSlot } from "../data/CellSlot";
     import type { Reactor } from "../data/Reactor";
-    import { constraints, toHeatColorInfinity } from "../graphics/utils";
+    import { constraints } from "../graphics/utils";
     import { translate } from "../language";
 
     function getSlotData(slot: CellSlot | null): TableData {
         if (!slot) return [];
         return [
             ["编号", "#" + slot.number],
-            ["x", slot.x],
-            ["y", slot.y],
-            ["深度", (slot.depth * 100).toFixed(2) + "%"],
-            ["温度", slot.temperature.toFixed(2) + "K"],
+            ["处于反应堆位置", `(${slot.x}, ${slot.y})`],
+            ["深度", (slot.depth * 100).toFixed(1), "%"],
+            ["温度", slot.temperature, "HU/MU"],
             ["元件类型", slot.cell ? translate(slot.cell.id) : "无"],
         ];
     }
 </script>
 
 <script lang="ts">
-    import { KEY_APPEND_COMMAND, KEY_APPEND_MESSAGE, KEY_GET_CONNECTION, TYPE_APPEND_COMMAND, TYPE_APPEND_MESSAGE, TYPE_GET_CONNECTION } from "../context";
+    import { KEY_APPEND_COMMAND, TYPE_APPEND_COMMAND } from "../context";
     import { getContext } from "svelte";
     import type { TableData } from "../widgits/InfoPanelWithTemperatureBar.svelte";
     import InfoPanelWithTemperatureBar from "../widgits/InfoPanelWithTemperatureBar.svelte";

@@ -16,6 +16,10 @@ body {
 	font-family: "Milibus Sb";
 	src: url("./fonts/Milibus\ Sb.ttf");
 }
+@font-face {
+	font-family: "字体圈欣意冠黑体";
+	src: url("./fonts/字体圈欣意冠黑体3.0.ttf");
+}
 
 a {
 	color: rgb(0,100,200);
