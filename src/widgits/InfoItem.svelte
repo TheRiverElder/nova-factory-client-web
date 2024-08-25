@@ -20,7 +20,9 @@
     </div>
     <div class="content">
         <span class="value">{wrap(value)}</span>
-        <span class="unit">{unit}</span>
+        {#if unit}
+            <span class="unit">{unit}</span>
+        {/if}
     </div>
 </div>
 
@@ -34,6 +36,11 @@
         font-style: italic;
         text-align: start;
         /* border-bottom: 0.05em solid #ffffff; */
+    }
+
+    .title::before {
+        /* content: "⚪"; */
+        font-style: normal;
     }
 
     .content {

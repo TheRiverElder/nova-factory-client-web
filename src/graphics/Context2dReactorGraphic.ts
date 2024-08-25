@@ -1,6 +1,6 @@
 import type { Reactor } from "../data/Reactor";
 import type { ReactorGraphic } from "./ReactorGraphic";
-import { makeColor, toHeatColorInfinity, toHeatInfinity } from "./utils";
+import { constraints, makeColor, toHeatColorInfinity, toHeatInfinity } from "./utils";
 
 export class Context2dReactorGraphic implements ReactorGraphic {
 
@@ -10,13 +10,44 @@ export class Context2dReactorGraphic implements ReactorGraphic {
     private lastCellSize: number = 0;
     private lastReactor: Reactor | null = null;
     private onSlotClick: (slotNumber: number) => void;
+    private colorMap: Uint8ClampedArray;
 
     init(canvas: HTMLCanvasElement, onSlotClick?: (slotNumber: number) => void): void {
         this.canvas = canvas;
+        this.setupColorMap();
         this.onSlotClick = onSlotClick;
         canvas.addEventListener("mousemove", this.onMouseMove);
         canvas.addEventListener("mouseleave", this.onMouseLeave);
         canvas.addEventListener("click", this.onMouseClick);
+    }
+
+    setupColorMap () {
+        const c = document.createElement("canvas");
+        const width = 0x0100;
+        const height = 1;
+        c.width = width;
+        c.height = height;
+        const g = c.getContext('2d');
+
+        const gradient = g.createLinearGradient(0, 0, width - 1, 0);
+        gradient.addColorStop(0.00, "#0000ff");
+        gradient.addColorStop(0.75, "#00ff00");
+        gradient.addColorStop(1.00, "#ff0000");
+        g.fillStyle = gradient;
+        g.fillRect(0, 0, width, height);
+
+        const imageData = g.getImageData(0, 0, width, height);
+        this.colorMap = imageData.data.slice();
+    }
+
+    // value is in [0, 0xff]
+    mapColor(value: number, data: Uint8ClampedArray, index: number, keepAlpha: boolean = true) {
+        const v = constraints(Math.floor(value), 0, 0xff);
+        const colorIndex = v * 4;
+        data[index] = this.colorMap[colorIndex];
+        data[index + 1] = this.colorMap[colorIndex + 1];
+        data[index + 2] = this.colorMap[colorIndex + 2];
+        data[index + 3] = keepAlpha ? v : this.colorMap[colorIndex + 3];
     }
 
     onMouseMove = (ev: MouseEvent) => {
@@ -78,33 +109,31 @@ export class Context2dReactorGraphic implements ReactorGraphic {
 
         g.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        function genColorNum(t: number) {
-            return toHeatColorInfinity(t, 1 / 500.0);
-        }
-
-        function genColorStyle(t: number) {
-            return makeColor(genColorNum(t));
-        }
-
-        g.fillStyle = genColorStyle(0);
-        g.fillRect(0, 0, width * cellSize, height * cellSize);
-
         for (const slot of reactor.slots) {
             const { number, x, y, temperature, cell } = slot;
             const cxp = (x + 0.5) * cellSize;
             const cyp = (y + 0.5) * cellSize;
             if (cell) {
-                let colorNum = genColorNum(temperature);
+                let colorNum = toHeatColorInfinity(temperature, 1 / 1000.0);
                 colorNum -= colorNum % 0x0100;
-                const ratio = toHeatInfinity(temperature, 1 / 100.0);
-                const gradient = g.createRadialGradient(cxp, cyp, cellSize / 8, cxp, cyp, Math.max(cellSize / 4, cellSize * ratio));
-                gradient.addColorStop(0.0, makeColor(colorNum + 0xff));
-                // gradient.addColorStop(0.75, makeColor(colorNum + 0x7f));
+                const ratio = toHeatInfinity(temperature, 1 / 1000.0);
+                const radius = cellSize;
+                // const gradient = g.createRadialGradient(cxp, cyp, cellSize / 8, cxp, cyp, Math.max(cellSize / 4, cellSize * ratio));
+                const gradient = g.createRadialGradient(cxp, cyp, (0.1 + 0.1 * ratio) * radius, cxp, cyp, radius);
+                gradient.addColorStop(0.0, makeColor(colorNum + Math.floor(0xff * ratio)));
                 gradient.addColorStop(1.0, makeColor(colorNum));
                 g.fillStyle = gradient;
-                g.fillRect(0, 0, canvasWidth, canvasHeight);
+                g.fillRect(cxp - radius, cyp - radius, 2 * radius, 2 * radius);
             }
         }
+
+        const imageData = g.getImageData(0, 0, canvasWidth, canvasHeight);
+        const imageDataData = imageData.data;
+        for (let i = 0; i < imageDataData.length; i += 4) {
+            const alpha = imageDataData[i + 3];
+            this.mapColor(alpha, imageDataData, i, true);
+        }
+        g.putImageData(imageData, 0, 0);
 
         this.renderSelectFrame(g, cellSize, this.selectedSlot, "#ffff00");
         this.renderSelectFrame(g, cellSize, this.mouseHoverSlot, "#ffff007f");

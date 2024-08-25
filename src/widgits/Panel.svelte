@@ -17,7 +17,7 @@
         backdrop-filter: blur(2px);
         border-radius: 0.2em;
         border: #ffff00 solid 0.1em;
-        box-shadow: inset #ffff00 0 0 0.5em;
+        /* box-shadow: inset #ffff00 0 0 0.5em; */
         display: flex;
         flex-direction: column;
     }

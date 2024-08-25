@@ -20,7 +20,8 @@
     import VitalDataView from "../components/VitalDataView.svelte";
     import { KEY_APPEND_COMMAND, KEY_GET_CONNECTION, TYPE_GET_CONNECTION } from "../context";
     import type { Factory } from "../data/Factory";
-import type { Level } from "../data/Level";
+import type { FactoryHistory, ReactorHistory } from "../data/History";
+    import type { Level } from "../data/Level";
     import type { Reactor } from "../data/Reactor";
     import Panel from "../widgits/Panel.svelte";
     import TabsPanel from "../widgits/TabsPanel.svelte";
@@ -28,7 +29,10 @@ import type { Level } from "../data/Level";
     let reactorUid: number = 0;
     let reactor: Reactor | null = null;
     let factory: Factory | null = null;
+    let factoryHistory: FactoryHistory | null = null;
+    let reactorHistory: ReactorHistory | null = null;
     let level: Level | null = null;
+    let updatedTime: number = 0;
     let selectedSlotNumber: number = -1;
 
     const getConnection: TYPE_GET_CONNECTION = getContext(KEY_GET_CONNECTION);
@@ -37,7 +41,10 @@ import type { Level } from "../data/Level";
     const onMessage = () => {
         gameConn.getFactoryInfo().then((f) => (factory = f));
         gameConn.getReactorInfo(reactorUid).then((r) => (reactor = r));
+        gameConn.getReactorHistory(reactorUid, -10, -1).then((rh) => (reactorHistory = rh));
+        gameConn.getFactoryHistory(-10, -1).then((fh) => (factoryHistory = fh));
         gameConn.getLevelInfo().then((l) => (level = l));
+        updatedTime = Date.now();
     };
     gameConn.onStateListeners.add(onMessage);
     const onDestroyhandler = () => {
@@ -67,7 +74,7 @@ import type { Level } from "../data/Level";
         <TabsPanel tabs={leftTabs} bind:tab={leftTab}>
             {#if factory}
                 {#if leftTab === "factory-info"}
-                    <FactoryInfoView {factory} setIndex={setReactorUid} index={reactorUid} />
+                    <FactoryInfoView {factory} history={factoryHistory} setIndex={setReactorUid} index={reactorUid} />
                 {:else if leftTab === "storage"}
                     <StorageView storage={factory.storage} {reactorUid} {selectedSlotNumber} />
                 {/if}
@@ -79,7 +86,7 @@ import type { Level } from "../data/Level";
         <TabsPanel tabs={midTabs} bind:tab={midTab}>
             {#if midTab === "reactor-info"}
                 {#if reactor}
-                    <ReactorView {reactor} bind:selectedSlotNumber />
+                    <ReactorView {reactor} history={reactorHistory} bind:selectedSlotNumber />
                 {/if}
             {:else if midTab === "shop" && factory}
                 <ShopView shop={factory.shop} />
@@ -90,7 +97,7 @@ import type { Level } from "../data/Level";
     <div class="right">
         <div class="flex-1">
             <Panel>
-                <VitalDataView {factory} {level} />
+                <VitalDataView {factory} {level} {updatedTime} />
             </Panel>
         </div>
         <div class="flex-1">

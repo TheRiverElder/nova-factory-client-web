@@ -2,10 +2,9 @@
 </script>
 
 <script lang="ts">
-    import { afterUpdate, getContext, onDestroy, onMount } from "svelte";
+    import { afterUpdate, onDestroy, onMount } from "svelte";
     import ReactorInfoView from "../components/ReactorInfoView.svelte";
     import SlotInfoView from "../components/SlotInfoView.svelte";
-    import { KEY_GET_CONNECTION, TYPE_GET_CONNECTION } from "../context";
     import type { ReactorHistory } from "../data/History";
     import type { Reactor } from "../data/Reactor";
     import { Context2dReactorGraphic } from "../graphics/Context2dReactorGraphic";
@@ -16,14 +15,11 @@
 
     export let reactor: Reactor;
     export let selectedSlotNumber: number;
-    let history: ReactorHistory | null;
+    export let history: ReactorHistory | null;
 
     let chartWidth: number = 0;
 
     const graphic = new Context2dReactorGraphic();
-
-    const getConnection: TYPE_GET_CONNECTION = getContext(KEY_GET_CONNECTION);
-    const gameConn = getConnection();
 
     onMount(() => {
         resizeCanvas();
@@ -35,7 +31,6 @@
 
     function onUpdate() {
         resizeAndRedraw();
-        gameConn.getReactorHistory(reactor.uid, -10, -1).then((h) => (history = h));
     }
 
     function resizeCanvas() {
@@ -53,7 +48,9 @@
 
     function redraw() {
         if (reactor) {
+            // console.time("render");
             graphic.render(reactor);
+            // console.timeEnd("render");
         }
     }
 </script>
@@ -153,6 +150,7 @@
         box-shadow: #ffff00 0 0 0.5em;
         border-radius: 0.2em;
         border: #ffff00 solid 0.1em;
+        background-color: black;
     }
 
     .title {

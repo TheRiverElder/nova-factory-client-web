@@ -17,3 +17,13 @@ export function linkClosedPath(g: CanvasRenderingContext2D, path: Array<[number,
     }
     g.closePath();
 }
+
+export function clipPath(path: Array<[number, number]>): string {
+    const nodes: Array<string> = [];
+    nodes.push(`M ${path[0][0]} ${path[0][1]}`);
+    for (let i = 1; i < path.length; i++) {
+        nodes.push(`L ${path[0][0]} ${path[0][1]}`);
+    }
+    nodes.push("Z");
+    return `polygon(${nodes.join(" ")})`;
+}

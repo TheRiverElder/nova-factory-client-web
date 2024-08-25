@@ -21,20 +21,11 @@
     export let factory: Factory | null;
     export let index: number;
     export let setIndex: (i: number) => void;
-    let history: FactoryHistory | null;
+    export let history: FactoryHistory | null;
 
     let barWidth: number = 0;
 
     $: factoryData = factory ? getFactoryData(factory) : [];
-
-    const getConnection: TYPE_GET_CONNECTION = getContext(KEY_GET_CONNECTION);
-    const gameConn = getConnection();
-
-    afterUpdate(onUpdate);
-
-    function onUpdate() {
-        gameConn.getFactoryHistory(-10, -1).then((h) => (history = h));
-    }
 </script>
 
 {#if factory}
@@ -77,6 +68,7 @@
     .reactor-item {
         cursor: pointer;
         padding: 0.2em 2em;
+        clip-path: polygon(0 0, 100% 0, calc(100% - 1em) 100%, 0 100%);
     }
 
     .reactor-item.selected {
